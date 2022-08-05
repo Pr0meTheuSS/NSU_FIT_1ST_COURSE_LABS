@@ -1,8 +1,10 @@
+// Copyright 2022 Y.Olimpiev
 #pragma once
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
- 
+#include <stdio.h>
+
 typedef struct TNumber {
   unsigned long long IntPart;
   double FractPart;

@@ -1,8 +1,7 @@
+// Copyright 2022 Y.Olimpiev
 #include "Number.h"
 
-
-void ReverseString(char* str)
-{
+void ReverseString(char* str) {
     for (size_t i = 0; i < strlen(str) / 2; i++) {
       char tmp = str[i];
       str[i] = str[strlen(str) - 1 - i];
@@ -11,11 +10,9 @@ void ReverseString(char* str)
     str[strlen(str)] = '\0';
 }
 
-
-int ch_to_i(char ch)
-{
+int CharToInt(char ch) {
   int ret = 0;
-  switch(toupper(ch) ){
+  switch (toupper(ch)) {
     case '0': {ret = 0; break;}
     case '1': {ret = 1; break;}
     case '2': {ret = 2; break;}
@@ -37,10 +34,9 @@ int ch_to_i(char ch)
   return ret;
 }
 
-char IntToChar(int val)
-{
+char IntToChar(int val) {
   char ret = 0;
-  switch(val ){
+  switch (val) {
     case 0: {ret = '0'; break;}
     case 1: {ret = '1'; break;}
     case 2: {ret = '2'; break;}
@@ -63,47 +59,47 @@ char IntToChar(int val)
 }
 
 void InitNumber(TNumber* numb, char* numb_str, int base) {
-    size_t currSymbolIndex = 0;
-    numb->_intPart = 0;
-    numb->_fractPart = 0.0;
+  size_t currSymbolIndex = 0;
+  numb->IntPart = 0;
+  numb->FractPart = 0.0;
 
-    while (numb_str[currSymbolIndex] != '.' && numb_str[currSymbolIndex] != '\0') {
-      numb->_intPart *= base;
-      numb->_intPart += CharToInt(numb_str[currSymbolIndex]);
+  while (numb_str[currSymbolIndex] != '.' &&
+         numb_str[currSymbolIndex] != '\0') {
+    numb->IntPart *= base;
+    numb->IntPart += CharToInt(numb_str[currSymbolIndex]);
+    currSymbolIndex++;
+  }
+  if (numb_str[currSymbolIndex] == '.') {
+    currSymbolIndex++;
+    double exp = 1.0 / (double)base;
+    while (numb_str[currSymbolIndex] != '\0') {
+      numb->FractPart += CharToInt(numb_str[currSymbolIndex]) * exp;
+      exp /= base;
       currSymbolIndex++;
     }
-    currSymbolIndex = 0;
-    if (numb_str[currSymbolIndex] == '.') {
-      currSymbolIndex++;
-      double exp = 1.0 / (double)base;
-      while (numb_str[currSymbolIndex] != '\0') {
-        numb->_fractPart += CharToInt(numb_str[currSymbolIndex]) * exp;
-        exp /= base;
-        currSymbolIndex++;
-      }
-    }
+  }
 }
 
-void convert_number_base(TNumber numb, int to_base, char* res)
-{
-    if (numb._intPart == 0) {
-      res[0] = '0';
-    }
+void ConvertNumberBase(TNumber numb, int to_base, char* res) {
+  if (numb.IntPart == 0) {
+    res[0] = '0';
+  }
 
-    while (numb._intPart > 0) {
-      res[strlen(res)] = i_to_ch(numb._intPart % to_base);
-      numb._intPart /= to_base;
-    }
-    ReverseString(res);
+  while (numb.IntPart > 0) {
+    res[strlen(res)] = IntToChar(numb.IntPart % to_base);
+    numb.IntPart /= to_base;
+  }
+  ReverseString(res);
 
-    if (numb._fractPart > 0.0) {
-      res[strlen(res)] = '.';
-    }
+  if (numb.FractPart > 0.0) {
+    res[strlen(res)] = '.';
+  }
 
-    int FractPartLen = 0;
-    while (numb._fractPart > 0.0 && FractPartLen++ <= 12) {
-      numb._fractPart *= to_base;
-      res[strlen(res)] = i_to_ch((int)floor(numb._fractPart));
-      numb._fractPart -= floor(numb._fractPart);
-    }
+  int FractPartLen = 0;
+  while (numb.FractPart > 0.0 && FractPartLen <= 12) {
+    numb.FractPart *= to_base;
+    res[strlen(res)] = IntToChar((int)floor(numb.FractPart));
+    numb.FractPart -= floor(numb.FractPart);
+    FractPartLen++;
+  }
 }
