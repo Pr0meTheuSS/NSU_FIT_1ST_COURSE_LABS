@@ -1,4 +1,4 @@
-// Copyright [2022] Y.Olimpiev
+// Copyright 2022 Y.Olimpiev
 #include <stdlib.h>
 #include <stdio.h>
 #include "ConvertBase.h"
