@@ -1,68 +1,64 @@
 #include "BoyerMooreProtocol.h"
 
-void CreateTable(unsigned int table[ALPHABET_SIZE], int template[TEMPLATE_MAX_LEN]) {
-  size_t strLen = strlen(template);
-  strnset(table, strLen, 256);
-  table[strLen - 1] = strLen;
+#define _RELEASE
+//#define _DEBUG
 
-  for (size_t i = 1; i < strLen; i++) {
-    unsigned char currSymb = template[strLen - 1 - i];
-      if (table[currSymb] > i) {
-        table[currSymb] = i;
+void BoyerMooreProtocol(FILE* in, unsigned char template[TEMPLATE_MAX_LEN]) {
+  size_t templateLen = strlen(template);
+  #ifdef _DEBUG
+    printf("Template len: %zu\n", templateLen);
+  #endif
+  size_t offsetTable[256] = { 0 };
+  for (size_t i = 0; i < ALPHABET_SIZE; i++) {
+    offsetTable[i] = templateLen;
+  }
+
+//  memset(offsetTable, templateLen, 256);
+
+  for (size_t i = 1; i < templateLen; i++) {
+    unsigned char currSymb = template[templateLen - 1 - i];
+      if (offsetTable[currSymb] > i) {
+        offsetTable[currSymb] = i;
     }
   }
-}
-// TODO: remake by BoyerMoorProtocol(FILE* in, char template[TEMPLATE_MAX_LEN])
-void BoyerMooreProtocol(FILE* in){
-  size_t templateLen = 0;
-  int template[17] = { 0 };
 
-  while ((template[templateLen] = getc(in)) != '\n'){
-    templateLen++;
-  }
+  size_t currPosInTemplate = templateLen - 1;
+  size_t currPosInText = ftell(in) + templateLen;
+  size_t matchesAmount = 0;
 
-  unsigned int offsetTable[256] = {0};
-  CreateTable(offsetTable, template);
+  int currSymbol = 0;
+  fseek(in, currPosInText, SEEK_SET);
 
-  fseek(in, 0, SEEK_END);
-  size_t text_len = ftell(in) - templateLen - 1;
-  fseek(in, 0, SEEK_SET);
-
-  size_t i = templateLen - 1;
-  size_t pos_in_text = i;
-  size_t count_match_before = 0;
-
-  while (pos_in_text < text_len) {
-    int curr_symb_in_text = 0;
-    printf("%zu ", 1 + pos_in_text);
-      
-    fseek(in, pos_in_text + templateLen  + 1, SEEK_SET);
-    curr_symb_in_text = getc(in);
-
-    if (curr_symb_in_text == template[i]){
-        if (i == 0){            
-            i = templateLen - 1;
-            pos_in_text += offsetTable[template[i]] + count_match_before;
-            count_match_before = 0;
+  while ((currSymbol = getc(in)) != EOF) {
+    currSymbol = (unsigned int)currSymbol;
+    #ifdef _DEBUG
+      printf("Text curr symbol: %c Template curr symbol: %c Pos: %zu\n", currSymbol, template[currPosInTemplate], 1 + currPosInText);
+    #endif
+    #ifdef _RELEASE
+      printf("%zu ", currPosInText - templateLen - 1);
+    #endif
+    if (currSymbol == template[currPosInTemplate]) {
+      if (currPosInTemplate <= 0) {
+        currPosInTemplate = templateLen - 1;
+        currPosInText += offsetTable[template[currPosInTemplate]] + matchesAmount;
+        matchesAmount = 0;
+    } else {
+      currPosInTemplate--;
+      currPosInText--;
+      matchesAmount++;
       }
-        else{
-            i--;
-            pos_in_text--;
-        count_match_before++;
-        }
+    } else {
+      size_t offset = offsetTable[currSymbol];
+      #ifdef _DEBUG
+        printf("Offset for: %c  -  %d\n", currSymbol, offset);
+      #endif
+      if (matchesAmount) {
+        offset = offsetTable[template[templateLen - 1]] + matchesAmount;
+      }
+      currPosInText += offset;
+      matchesAmount = 0;
+      currPosInTemplate = templateLen - 1;
     }
-    else{
-        
-        if (count_match_before){
-            size_t offset = offsetTable[template[templateLen - 1]] + count_match_before;               
-            pos_in_text = pos_in_text + offset;
-        }
-        else{
-            size_t offset = offsetTable[curr_symb_in_text];                
-            pos_in_text = pos_in_text + offset; 
-        }            
-        count_match_before = 0;
-        i = templateLen - 1;
-    }
+    fseek(in, currPosInText, SEEK_SET);
   }
 }
